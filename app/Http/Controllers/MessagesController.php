@@ -117,7 +117,7 @@ class MessagesController extends Controller
 
         $thread->markAsRead($userId);
         //return response()->json(['thread' => $thread, 'clients' => $users]);
-        return response()->json('read');
+        return new ThreadResource($thread);
 
     }
 
@@ -164,6 +164,25 @@ class MessagesController extends Controller
                 $this->thread->addParticipant((int) request()->recipients);
             }
         });
+
+        /**
+         * dispatches an event
+         */
+        event(new NewMessage(
+            [
+                'id' => $this->thread->id,
+                'count' => $this->thread->userUnreadMessagesCount(request()->user()->id),
+                'users' => $this->thread->users,
+                'participants' => $this->thread->participants,
+                'profile_pictures' => collect($this->thread->users)->map(function($user){
+                    return [
+                        'profile_picture' => $user->profilePictures()->latest('created_at')->first()
+                    ];
+                }),
+                'messages' => $this->thread->messages
+            ]
+        ));
+
 
         return new ThreadResource($this->thread);
     }
@@ -213,7 +232,7 @@ class MessagesController extends Controller
                 'thread_id' => $this->thread->id,
                 'user_id' => request()->user()->id,
             ]);
-            
+
             $participant->last_read = new Carbon;
             $participant->save();
 
@@ -223,7 +242,26 @@ class MessagesController extends Controller
             }
         });
 
-      return new ThreadResource($this->thread);
+         /**
+         * dispatches an event
+         */
+        event(new NewMessage(
+            [
+                'id' => $this->thread->id,
+                'count' => $this->thread->userUnreadMessagesCount(request()->user()->id),
+                'users' => $this->thread->users,
+                'participants' => $this->thread->participants,
+                'profile_pictures' => collect($this->thread->users)->map(function($user){
+                    return [
+                        'profile_picture' => $user->profilePictures()->latest('created_at')->first()
+                    ];
+                }),
+                'messages' => $this->thread->messages
+            ]
+        ));
+
+     return new ThreadResource($this->thread);
+
 
     }
 }
