@@ -56,3 +56,60 @@ Route::group([], function(){
  });
 
 
+/**
+ * notifications routes
+ */
+
+Route::group([], function () {
+    Route::get('/notifications', [\App\Http\Controllers\NotificationsController::class, 'getNotifications']);
+ });
+
+
+ /**
+ * views routes
+ */
+
+Route::group([], function () {
+    Route::get('/viewers', [\App\Http\Controllers\ViewsController::class, 'getViewers']);
+ });
+
+
+ /**
+ * likes routes
+ */
+
+Route::group([], function () {
+    Route::get('/likers', [\App\Http\Controllers\LikeController::class, 'getLikers']);
+    Route::get('/likes', [\App\Http\Controllers\LikeController::class, 'getLikes']);
+    Route::post('/like', [\App\Http\Controllers\LikeController::class, 'like']);
+    Route::post('/unlike', [\App\Http\Controllers\LikeController::class, 'unlike']);
+ });
+
+
+ /**
+ * likes routes
+ */
+
+Route::group([], function () {
+    Route::get('/likers', [\App\Http\Controllers\LikeController::class, 'getLikers']);
+    Route::get('/likes', [\App\Http\Controllers\LikeController::class, 'getLikes']);
+    Route::post('/like', [\App\Http\Controllers\LikeController::class, 'like']);
+    Route::post('/unlike', [\App\Http\Controllers\LikeController::class, 'unlike']);
+ });
+
+
+ /**
+ * friend routes
+ */
+
+Route::group([], function () {
+    Route::get('/friends/{username}', [\App\Http\Controllers\FriendController::class, 'getFriends']);
+    Route::get('/friends', [\App\Http\Controllers\FriendController::class, 'getAuthUserFriends']);
+    Route::get('/friend-requests', [\App\Http\Controllers\FriendController::class, 'getFriendRequests']);
+    Route::get('/my-friend-requests', [\App\Http\Controllers\FriendController::class, 'myFriendRequests']);
+    Route::post('/send-friend-request', [\App\Http\Controllers\FriendController::class, 'sendFriendRequest']);
+    Route::post('/accept-friend-request', [\App\Http\Controllers\FriendController::class, 'acceptFriendRequest']);
+    Route::post('/reject-friend-request', [\App\Http\Controllers\FriendController::class, 'rejectFriendRequest']);
+});
+
+

@@ -27,7 +27,7 @@ trait MediaUpload {
 
     public function save_photo(){
         request()->validate([
-            'photos' =>  'required|mimes:jpeg,jpg,png'
+            'photos' =>  'required|mimes:jpeg,jpg,png,gif'
         ]);
 
         try {
@@ -83,6 +83,9 @@ trait MediaUpload {
  * @return void
  */
     public function files(){
+        request()->validate([
+            'file' =>  'required|mimes:jpeg,jpg,png,mp4,gif,wmv,mov,flv,pdf'
+        ]);
         try {
             $fileFullName = request()->file->getClientOriginalName();
         $fileName = pathinfo($fileFullName, PATHINFO_FILENAME);

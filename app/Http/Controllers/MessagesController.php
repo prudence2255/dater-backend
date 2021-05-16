@@ -171,12 +171,13 @@ class MessagesController extends Controller
         event(new NewMessage(
             [
                 'id' => $this->thread->id,
-                'count' => $this->thread->userUnreadMessagesCount(request()->user()->id),
                 'users' => $this->thread->users,
                 'participants' => $this->thread->participants,
-                'profile_pictures' => collect($this->thread->users)->map(function($user){
+                'extras' => collect($this->thread->users)->map(function($user){
                     return [
-                        'profile_picture' => $user->profilePictures()->latest('created_at')->first()
+                        'profile_picture' => $user->profilePictures()->latest('created_at')->first(),
+                         'count' => $this->thread->userUnreadMessagesCount($user->id),
+                         'user_id' => $user->id
                     ];
                 }),
                 'messages' => $this->thread->messages
@@ -248,12 +249,13 @@ class MessagesController extends Controller
         event(new NewMessage(
             [
                 'id' => $this->thread->id,
-                'count' => $this->thread->userUnreadMessagesCount(request()->user()->id),
                 'users' => $this->thread->users,
                 'participants' => $this->thread->participants,
-                'profile_pictures' => collect($this->thread->users)->map(function($user){
+                'extras' => collect($this->thread->users)->map(function($user){
                     return [
-                        'profile_picture' => $user->profilePictures()->latest('created_at')->first()
+                        'profile_picture' => $user->profilePictures()->latest('created_at')->first(),
+                         'count' => $this->thread->userUnreadMessagesCount($user->id),
+                         'user_id' => $user->id
                     ];
                 }),
                 'messages' => $this->thread->messages
@@ -265,3 +267,5 @@ class MessagesController extends Controller
 
     }
 }
+
+

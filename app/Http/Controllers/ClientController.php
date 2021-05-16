@@ -2,30 +2,33 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Client;
 use App\Models\Photo;
-use App\Models\ProfilePicture;
-use Illuminate\Http\Request;
-use App\Http\Requests\ClientRequest;
-use App\Http\Requests\UpdateClientRequest;
-use App\Http\Requests\MetaRequest;
+use App\Events\Viewed;
+use App\Models\Client;
+use App\Events\NewMessage;
 use Illuminate\Support\Str;
+use Illuminate\Http\Request;
+use App\Models\ProfilePicture;
+use App\Notifications\Welcome;
+use App\Http\Traits\MediaUpload;
+use App\Http\Requests\MetaRequest;
+use App\Http\Requests\ClientRequest;
+use App\Http\Resources\UserResource;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use App\Http\Traits\MediaUpload;
-use App\Events\NewMessage;
-use App\Http\Resources\UserResource;
 use App\Http\Resources\UsersResource;
+use Illuminate\Notifications\Notifiable;
+use App\Http\Requests\UpdateClientRequest;
 
 
 class ClientController extends Controller
 {
 
-    use MediaUpload;
+    use MediaUpload, Notifiable;
 
     public function __construct(){
         $this->middleware('auth:client')->except([
-             'store', 'clientLogin', 'show', 'getPhotos'
+             'store', 'clientLogin',
         ]);
     }
 
@@ -57,8 +60,17 @@ class ClientController extends Controller
        $client = Client::create($merge->all());
        $token = $client->createToken('token')->accessToken;
 
-       return response()->json(['data' => $client, 'token' => $token]);
-    }
+        //send a welcome message to a newly registered user
+        $client->notify(new Welcome('Registered'));
+
+       return response()->json([
+                     'data' => $client,
+                     'token' => $token,
+                     'welcome' => $client->notifications->first(function($n){
+                            return $n->type === "App\Notifications\Welcome";
+                            })
+                     ]);
+                    }
 
     /**
      * logs client in
@@ -98,6 +110,11 @@ class ClientController extends Controller
     public function show(Client $client)
     {
         $user = new UserResource($client);
+
+       if(request()->user()->id !== $client->id){
+            Viewed::dispatch($client);
+       }
+
         return response()->json($user);
     }
 
@@ -181,10 +198,6 @@ class ClientController extends Controller
         $savePhoto = ['photos' => $photo];
 
          $userPhoto = request()->user()->photos()->create($savePhoto);
-        //  Photo::create([
-        //     'client_id' => request()->user()->id,
-        //     'photos' => $photo
-        //  ]);
 
         return response()->json($userPhoto);
      }
@@ -225,9 +238,28 @@ class ClientController extends Controller
 
      public function authUser(){
        $user = new UserResource(Client::findOrFail(request()->user()->id));
-        return response()->json($user);
+
+        return response()->json([
+            'user' => $user,
+            'new_messages_count' => $user->unreadMessagesCount(),
+            'new_notifications_count' => $user->unreadNotifications->count(),
+            'new_views_count' => $user->views()->where('read_at', null)->count(),
+            'new_likes_count' => $user->likers()->where('read_at', null)->count(),
+            'new_friends_count' => $user->friends()->where('status', 'pending')->count(),
+            'notifications_count' => $this->notificationsCount($user),
+        ]);
      }
 
+     /**
+      * get the total number of notifications
+      */
 
+    public function notificationsCount($user){
+             return $user->unreadMessagesCount() +
+                $user->unreadNotifications->count()
+             + $user->views()->where('read_at', null)->count()
+             + $user->likers()->where('read_at', null)->count()
+             + $user->friends()->where('status', 'pending')->count();
+    }
 
 }

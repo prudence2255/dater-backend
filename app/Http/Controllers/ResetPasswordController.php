@@ -34,7 +34,8 @@ class ResetPasswordController extends Controller
          */
         if (!$user){
             return response()->json([
-                'errors' => (Object) ['error' => ['We did not find a user with this email']]
+                'errors' => (Object) ['error' => 
+                ['We did not find a user with this email']]
             ], 422);
         }
 

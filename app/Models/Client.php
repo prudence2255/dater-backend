@@ -2,12 +2,13 @@
 
 namespace App\Models;
 
+use App\Http\Traits\Messagable;
+use Laravel\Passport\HasApiTokens;
+use Illuminate\Notifications\Notifiable;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
-use Laravel\Passport\HasApiTokens;
-use Illuminate\Notifications\Notifiable;
-use App\Http\Traits\Messagable;
 
 class Client extends Authenticatable
 {
@@ -40,6 +41,12 @@ class Client extends Authenticatable
         'remember_token',
     ];
 
+
+/**
+ * change the route key to username
+ *
+ * @return void
+ */
     public function getRouteKeyName(){
         return 'username';
     }
@@ -91,9 +98,91 @@ class Client extends Authenticatable
         }
     }
 
+    /**
+     * social login relationship
+     *
+     * @return void
+     */
     public function socials(){
         return $this->hasOne('App\Models\Social');
     }
 
+
+    /**
+     * views relationship
+     *
+     * @return void
+     */
+    public function views(){
+        return $this->hasMany('App\Models\View');
+    }
+
+
+
+    public function viewers()
+    {
+        return $this->belongsToMany(Models::classname(Client::class), Models::table('views'), 'client_id', 'viewer_id');
+    }
+
+
+    /**
+     * likes relationship
+     *
+     * @return void
+     */
+    public function likes(){
+        return $this->HasMany('App\Models\Like');
+    }
+
+    /**
+     * your likes relationship
+     *
+     * @return void
+     */
+    public function myLikes(){
+        return $this->belongsToMany(Models::classname(Client::class), Models::table('likes'), 'liker_id', 'client_id');
+    }
+
+/**
+ * likers relationship
+ *
+ * @return void
+ */
+    public function likers()
+    {
+        return $this->belongsToMany(Models::classname(Client::class), Models::table('likes'), 'client_id', 'liker_id');
+    }
+
+
+ /**
+ * friends relationship
+ *
+ * @return void
+ */
+public function friends()
+{
+    return $this->belongsToMany(Models::classname(Client::class), Models::table('friends'), 'accepter_id', 'sender_id');
+}
+
+
+ /**
+ * friends relationship where you sent
+ *
+ * @return void
+ */
+public function myFriends()
+{
+    return $this->belongsToMany(Models::classname(Client::class), Models::table('friends'), 'sender_id', 'accepter_id');
+}
+
+
+
+public function friendsCount(){
+    $one = $this->friends()->where('status', 'accepted')->count();
+
+   $two = $this->myFriends()->where('status', 'accepted')->count();
+
+   return $one + $two;
+}
 
 }

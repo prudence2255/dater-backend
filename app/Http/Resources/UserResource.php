@@ -24,9 +24,10 @@ class UserResource extends JsonResource
             'first_name' => $this->first_name,
             'last_name' => $this->last_name,
             'profile_pictures' => $this->profilePictures()->latest('created_at')->first(),
-            'new_messages' => $this->unreadMessagesCount(),
-            'meta' => $this->meta
+            'meta' => $this->meta,
+            'friends_count' => $this->friendsCount(),
+            'likes_count' => $this->likers->count()
         ];
     }
-    
+
 }
