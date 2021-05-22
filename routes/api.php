@@ -23,9 +23,9 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
  */
 Route::group([], function(){
     Route::apiResource('admin',  App\Http\Controllers\AdminController::class);
-    Route::post('/update-password',  [\App\Http\Controllers\ResetPasswordController::class, 'updatePassword']);
-    Route::post('/reset-link',  [\App\Http\Controllers\ResetPasswordController::class, 'sendResetLink']);
-    Route::post('/reset',  [\App\Http\Controllers\ResetPasswordController::class, 'reset']);
+    // Route::post('/update-password',  [\App\Http\Controllers\ResetPasswordController::class, 'updatePassword']);
+    // Route::post('/reset-link',  [\App\Http\Controllers\ResetPasswordController::class, 'sendResetLink']);
+    // Route::post('/reset',  [\App\Http\Controllers\ResetPasswordController::class, 'reset']);
     Route::post('/admin-login',  [\App\Http\Controllers\AdminController::class, 'adminLogin']);
     Route::post('/admin-logout',  [\App\Http\Controllers\ClientController::class, 'adminLogout']);
 });
@@ -35,6 +35,9 @@ Route::group([], function(){
  */
 Route::group([], function(){
     Route::apiResource('clients',  App\Http\Controllers\ClientController::class);
+    Route::post('/update-password',  [\App\Http\Controllers\ResetPasswordController::class, 'updatePassword']);
+    Route::post('/reset-link',  [\App\Http\Controllers\ResetPasswordController::class, 'sendResetLink']);
+    Route::post('/reset',  [\App\Http\Controllers\ResetPasswordController::class, 'reset']);
     Route::post('/client-login',  [\App\Http\Controllers\ClientController::class, 'clientLogin']);
     Route::post('/client-logout',  [\App\Http\Controllers\ClientController::class, 'clientLogout']);
     Route::post('/update-meta',  [\App\Http\Controllers\ClientController::class, 'createOrUpdateMeta']);

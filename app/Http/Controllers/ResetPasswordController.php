@@ -5,12 +5,16 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Carbon\Carbon;
 use App\Notifications\PasswordResetNotification;
-use App\Models\User;
+use App\Models\Client;
 use App\Models\ResetPassword;
 
 
 class ResetPasswordController extends Controller
 {
+
+    public function __construct(){
+        $this->middleware('auth:client')->only(['updatePassword']);
+    }
 
     /**
      * get user email and send password reset link to the user
@@ -27,14 +31,14 @@ class ResetPasswordController extends Controller
         /**
          * get the user from the data base
          */
-        $user = User::where('email', $request->email)->first();
+        $user = Client::where('email', $request->email)->first();
 
         /**
          * if the user is not found, an error is returned
          */
         if (!$user){
             return response()->json([
-                'errors' => (Object) ['error' => 
+                'errors' => (Object) ['error' =>
                 ['We did not find a user with this email']]
             ], 422);
         }
@@ -97,7 +101,7 @@ class ResetPasswordController extends Controller
         /**
          * we get the user with the email from the database
          */
-        $user = User::where('email', $passwordReset->email)->first();
+        $user = Client::where('email', $passwordReset->email)->first();
 
         /**
          * we return an error if theres is no user with that email

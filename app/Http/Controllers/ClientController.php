@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use App\Models\ProfilePicture;
 use App\Notifications\Welcome;
 use App\Http\Traits\MediaUpload;
+use App\Http\Traits\Filters;
 use App\Http\Requests\MetaRequest;
 use App\Http\Requests\ClientRequest;
 use App\Http\Resources\UserResource;
@@ -24,7 +25,7 @@ use App\Http\Requests\UpdateClientRequest;
 class ClientController extends Controller
 {
 
-    use MediaUpload, Notifiable;
+    use MediaUpload, Notifiable, Filters;
 
     public function __construct(){
         $this->middleware('auth:client')->except([
@@ -39,8 +40,11 @@ class ClientController extends Controller
      */
     public function index()
     {
+        $query = Client::query();
 
-       return UsersResource::collection(Client::whereNotIn('id', [request()->user()->id])->paginate(10));
+        $query = $this->filterByGender($query);
+        
+       return UsersResource::collection($query->whereNotIn('id', [request()->user()->id])->paginate(10));
 
     }
 

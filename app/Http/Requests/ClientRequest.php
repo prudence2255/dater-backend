@@ -28,6 +28,7 @@ class ClientRequest extends FormRequest
             'last_name' => 'required|string',
             'email' => 'required|string|unique:clients',
             'password' => 'required|string|min:6',
+            'c_password' => 'required|same:password',
             'country' => 'required|string',
             'city' => 'required|string',
             'gender' => 'required|string',
