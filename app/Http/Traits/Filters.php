@@ -18,10 +18,10 @@ trait Filters {
         $user = request()->user();
         if(request()->has('gender')){
            return $query->where('gender', request()->gender);
-        }else if($user->gender === 'male'){
-           return $query->where('gender', 'female');
+        }else if($user->gender === 'Male'){
+           return $query->where('gender', 'Female');
         }else{
-            return $query->where('gender', 'male');
+            return $query->where('gender', 'Male');
         }
     }
 
