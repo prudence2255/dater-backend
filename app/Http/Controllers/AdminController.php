@@ -11,7 +11,8 @@ use Illuminate\Support\Facades\Hash;
 class AdminController extends Controller
 {
 
-    public function __construct(){
+    public function __construct()
+    {
         $this->middleware('auth:api')->except(['adminLogin']);
     }
     /**
@@ -44,7 +45,7 @@ class AdminController extends Controller
             'name' => $request->name,
             'email' => $request->email,
             'password' => $password,
-            'username' => Str::slug($request->name).bin2hex(random_bytes(5))
+            'username' => Str::slug($request->name) . bin2hex(random_bytes(5))
         ]);
 
         $token =  $user->createToken('token')->accessToken;
@@ -60,7 +61,8 @@ class AdminController extends Controller
      * @return void
      */
 
-     public function adminLogin(Request $request){
+    public function adminLogin(Request $request)
+    {
         $request->validate([
             'email' => 'required|email',
             'password' => 'required|string'
@@ -68,19 +70,22 @@ class AdminController extends Controller
 
         $remember_me = $request->has('remember_me') ? true : false;
 
-        if(Auth::attempt(['email' => request('email'),
-                         'password' => request('password')],
-                         $remember_me)){
-        $user = Auth::user();
-        $token = $user->createToken('token')->accessToken;
+        if (Auth::attempt(
+            [
+                'email' => request('email'),
+                'password' => request('password')
+            ],
+            $remember_me
+        )) {
+            $user = User::where('email', $request->email)->first();
 
-        return response()->json(['data' => $user, 'token' => $token]);
-        }
-        else{
-            return response()->json([ 'errors' => (Object) ['error' => ['Email or password invalid']]], 422);
-        }
+            $token = $user->createToken('token')->accessToken;
 
-     }
+            return response()->json(['data' => $user, 'token' => $token]);
+        } else {
+            return response()->json(['errors' => (object) ['error' => ['Email or password invalid']]], 422);
+        }
+    }
 
     /**
      * Display the specified resource.
@@ -114,10 +119,11 @@ class AdminController extends Controller
     }
 
 
-     /**
+    /**
      * logs client out
      */
-    public function adminLogout(Request $request){
+    public function adminLogout(Request $request)
+    {
         $request->user()->token()->revoke();
         return response()->json(['status', 'success']);
     }
@@ -133,6 +139,4 @@ class AdminController extends Controller
         $user->delete();
         return response()->json(['status' => 'success']);
     }
-
-
 }

@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\DB;
 use App\Events\NewMessage;
 use App\Http\Resources\ThreadsResource;
 use App\Http\Resources\ThreadResource;
+use Illuminate\Support\Facades\Log;
 
 class MessagesController extends Controller
 {
@@ -23,61 +24,27 @@ class MessagesController extends Controller
 
     public $message;
     public $thread;
-    public function __construct(){
+    public function __construct()
+    {
         $this->middleware('auth:client');
     }
     /**
      * display all messages associated with the current user
      */
-    public function getThreads(){
+    public function getThreads()
+    {
         $user = request()->user();
-    /**
-     * messages sent by user
-     */
-   // $messages = $user->messages()->get();
-   /**
-    * new messages count for user
-    */
-    //$messages = $user->unreadMessagesCount();
-    /**
-     * returns new messages count for user
-     */
-    //$messages = $user->threadsWithNewMessages();
 
-    /**
-     * threads the user is associated with
-     */
-    //$messages = Thread::forUser($user->id);
+        $messages = $user->threadsWithMessagesWithUsers($user->id)->get();
 
-    /**
-     * Returns threads with new messages that the user is associated with.
-     */
-    //$messages = Thread::ForUserWithNewMessages($user->id);
+        /**
+         * Returns unread messages given the userId.
+         */
+        //$messages = Message::unreadForUser($user->id)->get();
 
-    /**
-     * Returns array of unread messages in thread for given user
-     */
-    //messages = Thread::userUnreadMessages($user->id);
-
-    /**
-     * Returns count of unread messages in thread for given user
-     */
-    //$messages = Thread::userUnreadMessagesCount($user->id);
-
-    /**
-     * returns all threads with their associated messages for which the current user
-     * participated
-     */
-    $messages = $user->threadsWithMessagesWithUsers($user->id)->get();
-
-    /**
-     * Returns unread messages given the userId.
-     */
-    //$messages = Message::unreadForUser($user->id)->get();
-
-    return ThreadsResource::collection($messages);
-    //return response()->json($messages);
-}
+        return ThreadsResource::collection($messages);
+        //return response()->json($messages);
+    }
 
     /**
      * Show all of the message threads to the user.
@@ -91,7 +58,7 @@ class MessagesController extends Controller
         $threads = Thread::getAllLatest()->get();
 
 
-    return response()->json($threads);
+        return response()->json($threads);
     }
 
     /**
@@ -118,7 +85,6 @@ class MessagesController extends Controller
         $thread->markAsRead($userId);
         //return response()->json(['thread' => $thread, 'clients' => $users]);
         return new ThreadResource($thread);
-
     }
 
     /**
@@ -129,22 +95,22 @@ class MessagesController extends Controller
 
     public function store()
     {
-        DB::transaction(function ()  {
+        DB::transaction(function () {
 
-            $url;
+            $url = null;
 
-            if(request()->hasFile('file')){
-              $url = $this->files();
+            if (request()->hasFile('file')) {
+                $url = $this->files();
             }
 
 
 
-         $this->thread = Thread::create([
+            $this->thread = Thread::create([
                 'subject' => bin2hex(random_bytes(10)),
             ]);
 
             // Message
-           $this->message = Message::create([
+            $this->message = Message::create([
                 'thread_id' => $this->thread->id,
                 'user_id' => request()->user()->id,
                 'body' => request()->body ?? null,
@@ -173,11 +139,11 @@ class MessagesController extends Controller
                 'id' => $this->thread->id,
                 'users' => $this->thread->users,
                 'participants' => $this->thread->participants,
-                'extras' => collect($this->thread->users)->map(function($user){
+                'extras' => collect($this->thread->users)->map(function ($user) {
                     return [
                         'profile_picture' => $user->profilePictures()->latest('created_at')->first(),
-                         'count' => $this->thread->userUnreadMessagesCount($user->id),
-                         'user_id' => $user->id
+                        'count' => $this->thread->userUnreadMessagesCount($user->id),
+                        'user_id' => $user->id
                     ];
                 }),
                 'messages' => $this->thread->messages
@@ -191,7 +157,8 @@ class MessagesController extends Controller
     /**
      * upload message file
      */
-    public function uploadMessageFile(){
+    public function uploadMessageFile()
+    {
         $file = $this->files();
         return response()->json($file);
     }
@@ -204,23 +171,23 @@ class MessagesController extends Controller
      */
     public function update($id)
     {
-        DB::transaction(function () use($id){
-            $url;
-            if(request()->hasFile('file')){
-              $url = $this->files();
+        DB::transaction(function () use ($id) {
+            $url = null;
+            if (request()->hasFile('file')) {
+                $url = $this->files();
             }
 
             try {
                 $this->thread = Thread::findOrFail($id);
             } catch (ModelNotFoundException $e) {
 
-            //
+                //
             }
 
             $this->thread->activateAllParticipants();
 
             // Message
-           $this->message = Message::create([
+            $this->message = Message::create([
                 'thread_id' => $this->thread->id,
                 'user_id' => request()->user()->id,
                 'body' => request()->body ?? null,
@@ -243,7 +210,8 @@ class MessagesController extends Controller
             }
         });
 
-         /**
+
+        /**
          * dispatches an event
          */
         event(new NewMessage(
@@ -251,21 +219,17 @@ class MessagesController extends Controller
                 'id' => $this->thread->id,
                 'users' => $this->thread->users,
                 'participants' => $this->thread->participants,
-                'extras' => collect($this->thread->users)->map(function($user){
+                'extras' => collect($this->thread->users)->map(function ($user) {
                     return [
                         'profile_picture' => $user->profilePictures()->latest('created_at')->first(),
-                         'count' => $this->thread->userUnreadMessagesCount($user->id),
-                         'user_id' => $user->id
+                        'count' => $this->thread->userUnreadMessagesCount($user->id),
+                        'user_id' => $user->id
                     ];
                 }),
                 'messages' => $this->thread->messages
             ]
         ));
 
-     return new ThreadResource($this->thread);
-
-
+        return new ThreadResource($this->thread);
     }
 }
-
-

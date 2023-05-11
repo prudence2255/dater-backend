@@ -21,7 +21,7 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
 /**
  * admin routes
  */
-Route::group([], function(){
+Route::group([], function () {
     Route::apiResource('admin',  App\Http\Controllers\AdminController::class);
     // Route::post('/update-password',  [\App\Http\Controllers\ResetPasswordController::class, 'updatePassword']);
     // Route::post('/reset-link',  [\App\Http\Controllers\ResetPasswordController::class, 'sendResetLink']);
@@ -33,7 +33,7 @@ Route::group([], function(){
 /**
  * client routes
  */
-Route::group([], function(){
+Route::group([], function () {
     Route::apiResource('clients',  App\Http\Controllers\ClientController::class);
     Route::post('/update-password',  [\App\Http\Controllers\ResetPasswordController::class, 'updatePassword']);
     Route::post('/reset-link',  [\App\Http\Controllers\ResetPasswordController::class, 'sendResetLink']);
@@ -52,11 +52,11 @@ Route::group([], function(){
  * messages routes
  */
 
- Route::group([], function () {
+Route::group([], function () {
     Route::apiResource('threads',  App\Http\Controllers\MessagesController::class);
     Route::post('threads/{id}',  [App\Http\Controllers\MessagesController::class, 'update']);
     Route::get('/get-threads', [\App\Http\Controllers\MessagesController::class, 'getThreads']);
- });
+});
 
 
 /**
@@ -65,19 +65,19 @@ Route::group([], function(){
 
 Route::group([], function () {
     Route::get('/notifications', [\App\Http\Controllers\NotificationsController::class, 'getNotifications']);
- });
+});
 
 
- /**
+/**
  * views routes
  */
 
 Route::group([], function () {
     Route::get('/viewers', [\App\Http\Controllers\ViewsController::class, 'getViewers']);
- });
+});
 
 
- /**
+/**
  * likes routes
  */
 
@@ -86,10 +86,10 @@ Route::group([], function () {
     Route::get('/likes', [\App\Http\Controllers\LikeController::class, 'getLikes']);
     Route::post('/like', [\App\Http\Controllers\LikeController::class, 'like']);
     Route::post('/unlike', [\App\Http\Controllers\LikeController::class, 'unlike']);
- });
+});
 
 
- /**
+/**
  * likes routes
  */
 
@@ -98,10 +98,10 @@ Route::group([], function () {
     Route::get('/likes', [\App\Http\Controllers\LikeController::class, 'getLikes']);
     Route::post('/like', [\App\Http\Controllers\LikeController::class, 'like']);
     Route::post('/unlike', [\App\Http\Controllers\LikeController::class, 'unlike']);
- });
+});
 
 
- /**
+/**
  * friend routes
  */
 
@@ -115,4 +115,4 @@ Route::group([], function () {
     Route::post('/reject-friend-request', [\App\Http\Controllers\FriendController::class, 'rejectFriendRequest']);
 });
 
-
+Route::get('/test', [\App\Http\Controllers\TestController::class, 'test']);

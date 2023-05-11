@@ -29,7 +29,7 @@ class UpdateClientRequest extends FormRequest
             'country' => 'required|string',
             'city' => 'required|string',
             'gender' => 'required|string',
-            'age' => 'required|integer',
+            'birth_date' => 'required|date',
         ];
     }
 }

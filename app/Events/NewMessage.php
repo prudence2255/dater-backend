@@ -12,6 +12,7 @@ use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 use App\Http\Resources\ThreadResource;
+use Illuminate\Support\Facades\Log;
 
 class NewMessage implements ShouldBroadcast
 {
@@ -37,19 +38,22 @@ class NewMessage implements ShouldBroadcast
      */
     public function broadcastOn()
     {
+
         //return new PrivateChannel('channel-name');
         return new Channel('message');
     }
 
 
-    // public function broadcastWith(){
+    // public function broadcastWith()
+    // {
     //     return [
-    //         'body' =>
+    //         'body' => $this->thread
     //     ];
     // }
 
 
-    public function broadcastAs() {
+    public function broadcastAs()
+    {
         return 'message.created';
-        }
+    }
 }

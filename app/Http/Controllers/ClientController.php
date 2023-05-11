@@ -27,9 +27,11 @@ class ClientController extends Controller
 
     use MediaUpload, Notifiable, Filters;
 
-    public function __construct(){
+
+    public function __construct()
+    {
         $this->middleware('auth:client')->except([
-             'store', 'clientLogin',
+            'store', 'clientLogin',
         ]);
     }
 
@@ -40,12 +42,11 @@ class ClientController extends Controller
      */
     public function index()
     {
-        $query = Client::query();
+        $start_query = Client::query();
 
-        $query = $this->filterByGender($query);
-        
-       return UsersResource::collection($query->whereNotIn('id', [request()->user()->id])->paginate(10));
+        $query = $this->filters($start_query);
 
+        return UsersResource::collection($query->whereNotIn('id', [request()->user()->id])->paginate(10));
     }
 
     /**
@@ -59,29 +60,33 @@ class ClientController extends Controller
     {
         $password = Hash::make($request->password);
         $collection = collect($request->all());
-        $username = Str::slug($request->first_name).bin2hex(random_bytes(5));
+        $username = Str::slug($request->first_name) . bin2hex(random_bytes(5));
         $merge = $collection->merge(compact('username', 'password'));
-       $client = Client::create($merge->all());
-       $token = $client->createToken('token')->accessToken;
+        $client = Client::create($merge->all());
+        $client->username = Str::slug($request->first_name) . bin2hex($client->id);
+        $client->active = '1';
+        $client->save();
+        $token = $client->createToken('token')->accessToken;
 
         //send a welcome message to a newly registered user
         $client->notify(new Welcome('Registered'));
 
-       return response()->json([
-                     'data' => $client,
-                     'token' => $token,
-                     'welcome' => $client->notifications->first(function($n){
-                            return $n->type === "App\Notifications\Welcome";
-                            })
-                     ]);
-                    }
+        return response()->json([
+            'data' => $client,
+            'token' => $token,
+            'welcome' => $client->notifications->first(function ($n) {
+                return $n->type === "App\Notifications\Welcome";
+            })
+        ]);
+    }
 
     /**
      * logs client in
      *
      * @return void
      */
- public function clientLogin(Request $request){
+    public function clientLogin(Request $request)
+    {
         $request->validate([
             'email' => 'required|email',
             'password' => 'required|string'
@@ -89,20 +94,28 @@ class ClientController extends Controller
         $remember_me = $request->has('remember_me') ? true : false;
 
         $client = Client::where('email', $request->email)->first();
-       if($client){
-           if(Hash::check($request->password, $client->password)){
-            $token = $client->createToken('token')->accessToken;
-            return response()->json(['data' => $client, 'token' => $token]);
-           }else{
-            return response()->json([
-                    'errors' => (Object) ['error' => ['Email or password invalid']]],
-                             422);
-             }
-       }else{
-        return response()->json([
-                'errors' => (Object) ['error' => ['Email or password invalid']]],
-                         422);
+        if ($client) {
+            if (Hash::check($request->password, $client->password)) {
+                $token = $client->createToken('token')->accessToken;
+                $client->active = '1';
+                $client->save();
+                return response()->json(['data' => $client, 'token' => $token]);
+            } else {
+                return response()->json(
+                    [
+                        'errors' => (object) ['error' => ['Email or password invalid']]
+                    ],
+                    422
+                );
             }
+        } else {
+            return response()->json(
+                [
+                    'errors' => (object) ['error' => ['Email or password invalid']]
+                ],
+                422
+            );
+        }
     }
 
     /**
@@ -115,9 +128,9 @@ class ClientController extends Controller
     {
         $user = new UserResource($client);
 
-       if(request()->user()->id !== $client->id){
+        if (request()->user()->id !== $client->id) {
             Viewed::dispatch($client);
-       }
+        }
 
         return response()->json($user);
     }
@@ -138,7 +151,7 @@ class ClientController extends Controller
         return response()->json($user);
     }
 
-/**
+    /**
      * Update the specified resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
@@ -155,26 +168,31 @@ class ClientController extends Controller
 
 
     /**
-    * create or update client meta
+     * create or update client meta
      */
 
-    public function createOrUpdateMeta(MetaRequest $request){
+    public function createOrUpdateMeta(MetaRequest $request)
+    {
         $user = $request->user();
-        if(!$user->meta){
-        $user->meta()->create($request->all());
-        }else{
-          $user->meta()->update($request->all());
+        if (!$user->meta) {
+            $user->meta()->create($request->all());
+        } else {
+            $user->meta()->update($request->all());
         }
 
-        return response()->json( new UserResource($user));
+        return response()->json(new UserResource($user));
     }
 
 
     /**
      * logs client out
      */
-    public function clientLogout(Request $request){
-        $request->user()->token()->revoke();
+    public function clientLogout(Request $request)
+    {
+        $user =  $request->user();
+        $user->active = '0';
+        $user->save();
+        $user->token()->revoke();
 
         return response()->json(['status', 'success']);
     }
@@ -197,51 +215,54 @@ class ClientController extends Controller
      * photos upload
      */
 
-     public function photoUpload(){
-         $photo = $this->save_photo();
+    public function photoUpload()
+    {
+        $photo = $this->save_photo();
         $savePhoto = ['photos' => $photo];
 
-         $userPhoto = request()->user()->photos()->create($savePhoto);
+        $userPhoto = request()->user()->photos()->create($savePhoto);
 
         return response()->json($userPhoto);
-     }
+    }
 
 
-     /**
-      * retrieve user photos
-      *
-      * @return void
-      */
-     public function getPhotos($username){
+    /**
+     * retrieve user photos
+     *
+     * @return void
+     */
+    public function getPhotos($username)
+    {
         $user = Client::where('username', $username)->first();
         $photos = collect($user->photos);
         $profile_pics = collect($user->profilePictures);
         $merge = $photos->merge($profile_pics);
 
         return response()->json($merge->all());
-     }
+    }
 
-     /**
-      * upload profile picture
-      */
-     public function uploadProfilePic(Request $request){
-     $photo = $this->save_photo();
+    /**
+     * upload profile picture
+     */
+    public function uploadProfilePic(Request $request)
+    {
+        $photo = $this->save_photo();
         ProfilePicture::create([
-           'client_id' => request()->user()->id,
-           'photos' =>  $photo
+            'client_id' => request()->user()->id,
+            'photos' =>  $photo
         ]);
 
-       return response()->json($photo);
+        return response()->json($photo);
+    }
 
-     }
 
+    /**
+     * get logged in user
+     */
 
-     /**
-      * get logged in user
-      */
-
-     public function authUser(){
-       $user = new UserResource(Client::findOrFail(request()->user()->id));
+    public function authUser()
+    {
+        $user = new UserResource(Client::findOrFail(request()->user()->id));
 
         return response()->json([
             'user' => $user,
@@ -252,18 +273,18 @@ class ClientController extends Controller
             'new_friends_count' => $user->friends()->where('status', 'pending')->count(),
             'notifications_count' => $this->notificationsCount($user),
         ]);
-     }
-
-     /**
-      * get the total number of notifications
-      */
-
-    public function notificationsCount($user){
-             return $user->unreadMessagesCount() +
-                $user->unreadNotifications->count()
-             + $user->views()->where('read_at', null)->count()
-             + $user->likers()->where('read_at', null)->count()
-             + $user->friends()->where('status', 'pending')->count();
     }
 
+    /**
+     * get the total number of notifications
+     */
+
+    public function notificationsCount($user)
+    {
+        return $user->unreadMessagesCount() +
+            $user->unreadNotifications->count()
+            + $user->views()->where('read_at', null)->count()
+            + $user->likers()->where('read_at', null)->count()
+            + $user->friends()->where('status', 'pending')->count();
+    }
 }

@@ -11,16 +11,18 @@ use Illuminate\Support\Facades\DB;
 class FriendController extends Controller
 {
 
-    public function __construct(){
+    public function __construct()
+    {
         $this->middleware('auth:client');
     }
 
     /**
      * get friends
      *
-     * @return void
+     * @return Resource
      */
-    public function getFriends($username){
+    public function getFriends($username)
+    {
         $user = Client::where('username', $username)->first();
         return UsersResource::collection($this->mergeFriends($user));
     }
@@ -29,9 +31,10 @@ class FriendController extends Controller
     /**
      * get auth user friends
      *
-     * @return void
+     * @return Resource
      */
-    public function getAuthUserFriends(){
+    public function getAuthUserFriends()
+    {
         $user = request()->user();
         return UsersResource::collection($this->mergeFriends($user));
     }
@@ -40,9 +43,10 @@ class FriendController extends Controller
     /**
      * get  requests sent to you
      *
-     * @return void
+     * @return Resource
      */
-    public function getFriendRequests(){
+    public function getFriendRequests()
+    {
         $user = request()->user();
         return UsersResource::collection($user->friends()->where('status', 'pending')->get());
     }
@@ -51,9 +55,10 @@ class FriendController extends Controller
     /**
      * get  requests you sent
      *
-     * @return void
+     * @return Response
      */
-    public function myFriendRequests(){
+    public function myFriendRequests()
+    {
         $user = request()->user();
         return UsersResource::collection($user->myFriends()->where('status', 'pending')->get());
     }
@@ -62,9 +67,10 @@ class FriendController extends Controller
     /**
      * send a friend request
      *
-     * @return void
+     * @return Response
      */
-    public function sendFriendRequest(){
+    public function sendFriendRequest()
+    {
         $request = Friend::create([
             'sender_id' => request()->user()->id,
             'accepter_id' => request()->client_id,
@@ -77,12 +83,13 @@ class FriendController extends Controller
     /**
      * accepts a friend request
      *
-     * @return void
+     * @return Response
      */
-    public function acceptFriendRequest(){
+    public function acceptFriendRequest()
+    {
         $request = Friend::where('accepter_id', request()->user()->id)
-                            ->where('sender_id', request()->client_id)
-                            ->first();
+            ->where('sender_id', request()->client_id)
+            ->first();
 
         $request->read_at = now();
         $request->status = 'accepted';
@@ -94,47 +101,47 @@ class FriendController extends Controller
     /**
      * rejects a friend request
      */
-    public function rejectFriendRequest(){
+    public function rejectFriendRequest()
+    {
         $request = Friend::where('accepter_id', request()->user()->id)
-                    ->where('sender_id', request()->client_id)
-                    ->first();
+            ->where('sender_id', request()->client_id)
+            ->first();
 
-        if($request){
+        if ($request) {
             $request->delete();
         }
         return response()->json($request);
-         }
+    }
 
 
 
-         /**
-          * display the merged friends
-          *
-          * @param [type] $user
-          * @return void
-          */
-   public function mergeFriends($user){
-            $friends = Friend::where('accepter_id', $user->id)
+    /**
+     * display the merged friends
+     *
+     * @param [type] $user
+     * @return collecion
+     */
+    public function mergeFriends($user)
+    {
+        $friends = Friend::where('accepter_id', $user->id)
             ->orWhere('sender_id', $user->id)
-            ->where(function($query){
+            ->where(function ($query) {
                 $query->where('status', 'accepted');
             })
             ->paginate(10);
 
-        $friends = $friends->map(function($friend){
-        return [$friend->myFriend, $friend->friendOfMe];
+        $friends = $friends->map(function ($friend) {
+            return [$friend->myFriend, $friend->friendOfMe];
         });
 
-        $friends = array_filter($friends[0] ?? [], function($friend) use($user){
-            if($user->id === request()->user()->id){
+        $friends = array_filter($friends[0] ?? [], function ($friend) use ($user) {
+            if ($user->id === request()->user()->id) {
                 return $friend->id !== request()->user()->id;
-            }else{
+            } else {
                 return $friend->id !== $user->id;
             }
         });
 
         return $friends;
-   }
-
-
+    }
 }

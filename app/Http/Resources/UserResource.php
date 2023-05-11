@@ -18,6 +18,8 @@ class UserResource extends JsonResource
             'id' => $this->id,
             'username' => $this->username,
             'age' => $this->age,
+            'birth_date' => $this->birth_date,
+            'active' =>  boolval($this->active),
             'country' => $this->country,
             'city' => $this->city,
             'gender' => $this->gender,
@@ -29,5 +31,4 @@ class UserResource extends JsonResource
             'likes_count' => $this->likers->count()
         ];
     }
-
 }

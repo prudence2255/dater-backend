@@ -11,7 +11,8 @@ class NotificationsController extends Controller
      * constructor
      */
 
-    public function __construct(){
+    public function __construct()
+    {
         $this->middleware('auth:client');
     }
 
@@ -20,15 +21,12 @@ class NotificationsController extends Controller
      *
      * @return void
      */
-    public function getNotifications(){
+    public function getNotifications()
+    {
         $user = request()->user();
 
         $user->unreadNotifications->markAsRead();
 
         return response()->json($user->notifications);
-        
     }
-
-
-
 }

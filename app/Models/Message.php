@@ -5,6 +5,10 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model as Eloquent;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Crypt;
+
+//Crypt::encryptString($request->token),
+//Crypt::decryptString($encryptedValue);
 
 class Message extends Eloquent
 {
@@ -47,6 +51,20 @@ class Message extends Eloquent
 
         parent::__construct($attributes);
     }
+
+
+    //encrypt the body text
+    function setBodyAttribute($value)
+    {
+        $this->attributes['body'] = Crypt::encryptString($value);
+    }
+
+    //decrypt the body text
+    function getBodyAttribute($value)
+    {
+        return Crypt::decryptString($value);
+    }
+
 
     /**
      * Thread relationship.
@@ -113,6 +131,4 @@ class Message extends Eloquent
                     });
             });
     }
-
-
 }
