@@ -115,4 +115,4 @@ Route::group([], function () {
     Route::post('/reject-friend-request', [\App\Http\Controllers\FriendController::class, 'rejectFriendRequest']);
 });
 
-Route::get('/test', [\App\Http\Controllers\TestController::class, 'test']);
+Route::get('/test', [App\Http\Controllers\ClientController::class, 'test']);

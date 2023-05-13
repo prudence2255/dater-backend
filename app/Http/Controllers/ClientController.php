@@ -31,10 +31,15 @@ class ClientController extends Controller
     public function __construct()
     {
         $this->middleware('auth:client')->except([
-            'store', 'clientLogin',
+            'store', 'clientLogin', 'test'
         ]);
     }
 
+    public function test()
+    {
+        echo json_encode('tested');
+        return;
+    }
     /**
      * Display a listing of the resource.
      *
